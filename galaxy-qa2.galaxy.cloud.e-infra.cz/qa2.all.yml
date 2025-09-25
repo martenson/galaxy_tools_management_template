@@ -1,0 +1,22 @@
+tools:
+- name: fastqc
+  owner: devteam
+  revisions:
+  - 5ec9f6bceaee
+  tool_panel_section_id: fetch_sequences___alignments
+  tool_panel_section_label: Fetch Sequences / Alignments
+  tool_shed_url: toolshed.g2.bx.psu.edu
+- name: bwa_mem2
+  owner: iuc
+  revisions:
+  - af91699b8d4c
+  tool_panel_section_id: mapping
+  tool_panel_section_label: Mapping
+  tool_shed_url: toolshed.g2.bx.psu.edu
+- name: alphafold2
+  owner: galaxy-australia
+  revisions:
+  - c62f678e5555
+  tool_panel_section_id: proteomics
+  tool_panel_section_label: Proteomics
+  tool_shed_url: toolshed.g2.bx.psu.edu

@@ -1,0 +1,4 @@
+tool_panel_section_label: Mapping
+tools:
+- name: bwa_mem2
+  owner: iuc

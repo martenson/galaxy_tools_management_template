@@ -1,0 +1,28 @@
+---
+type: map
+mapping:
+    "tool_panel_section_id":
+        type: str
+        enum:
+              [
+                "fetch_sequences___alignments",
+                "mapping",
+                "proteomics",
+              ]
+    "tool_panel_section_label":
+        type: str
+
+    "tools":
+        type: seq
+        sequence:
+            - type: map
+              mapping:
+                "name":
+                    type: str
+                    required: true
+                "owner":
+                    type: str
+                    required: true
+                "tool_shed_url":
+                    type: str
+                    required: false
