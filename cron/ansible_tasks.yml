@@ -1,0 +1,38 @@
+- hosts: galaxyservers
+  become: true
+  become_user: root
+  post_tasks:
+    - name: Create a file with key for CRON jobs
+      ansible.builtin.copy:
+        content: |
+          {{ api_key }}
+        dest: "/home/{{ galaxy_user_name }}/.galaxy_api_key"
+        owner: "{{ galaxy_user_name }}"
+        group: "{{ galaxy_user_group_name }}"
+        mode: '0600'
+      tags: cron
+      no_log: true
+    - name: Ensure the tools cron script directory exists
+      ansible.builtin.file:
+        path: "{{ galaxy_root }}/cron/tools"
+        state: directory
+        owner: "{{ galaxy_user_name }}"
+        group: "{{ galaxy_user_group_name }}"
+        mode: '0755'
+      tags: cron
+    - name: Template tool installation cron script
+      ansible.builtin.template:
+        src: "{{ playbook_dir }}/templates/galaxy/cron/install_tools.sh.j2"
+        dest: "{{ galaxy_root }}/cron/tools/install_tools.sh"
+        owner: "{{ galaxy_user_name }}"
+        group: "{{ galaxy_user_group_name }}"
+        mode: '0755'
+      tags: cron
+    - name: Schedule tool installation script using cron
+      ansible.builtin.cron:
+        name: "Install tool updates"
+        user: "{{ galaxy_user_name }}"
+        minute: "0"
+        hour: "3" # 3 am daily
+        job: "/bin/bash -c 'URL={{ inventory_hostname }} API_KEY=$(cat /home/{{ galaxy_user_name }}/.galaxy_api_key) {{ galaxy_root }}/cron/tools/install_tools.sh 2>&1 | logger -t tool_install'"
+      tags: cron
