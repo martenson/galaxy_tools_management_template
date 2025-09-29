@@ -5,6 +5,13 @@ tools:
 - name: fastqc
   owner: devteam
   revisions:
+  - 2c64fded1286
   - 5ec9f6bceaee
+  tool_panel_section_id: fetch_sequences___alignments
+  tool_panel_section_label: Fetch Sequences / Alignments
+- name: fastp
+  owner: iuc
+  revisions:
+  - 1c183b0a6cfd
   tool_panel_section_id: fetch_sequences___alignments
   tool_panel_section_label: Fetch Sequences / Alignments

@@ -2,6 +2,7 @@ ifndef INSTANCE
 $(error INSTANCE is required but not set)
 endif
 
+## As the yml files grow with installed tools paralellism is used here to make the Makefile targets run faster.
 NPROC := $(shell nproc 2>/dev/null || sysctl -n hw.logicalcpu) ## Workaround since MacOS does not have nproc
 
 help:
@@ -22,7 +23,10 @@ fix: ## For the given INSTANCE fix all lockfiles and add the latest revision to 
 	find ./$(INSTANCE)/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P $(NPROC) python3 scripts/update_tool.py --without --log debug
 
 update-owner:  ## For the given INSTANCE update all tools that are owned by the OWNER
-	find ./$(INSTANCE)/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P $(NPROC) python3 scripts/update_tool.py --owner $(OWNER)
+	find ./$(INSTANCE)/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P $(NPROC) python3 scripts/update_tool.py --owner $(REPO_OWNER)
+
+update-repo:  ## For the given INSTANCE update all tools that are owned by the OWNER
+	find ./$(INSTANCE)/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P $(NPROC) python3 scripts/update_tool.py --name $(REPO_NAME)
 
 update-all: ## For the given INSTANCE update all tools
 	find ./$(INSTANCE)/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P $(NPROC) python3 scripts/update_tool.py

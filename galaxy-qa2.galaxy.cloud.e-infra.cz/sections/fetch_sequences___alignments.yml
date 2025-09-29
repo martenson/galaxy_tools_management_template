@@ -2,3 +2,5 @@ tool_panel_section_label: Fetch Sequences / Alignments
 tools:
 - name: fastqc
   owner: devteam
+- name: fastp
+  owner: iuc

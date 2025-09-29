@@ -4,17 +4,17 @@ This template is designed to provide Galaxy administrators with a process to eas
 
 When set up it can also be used as a contact point for users to request tool installations from their admins.
 
-## walkthrough: Set up this template
+## walkthrough: How To Use This Template
 
-### assumptions:
+### Assumptions:
 
 The following walkthrough is detailed but makes some assumptions in order to not branch out too much. However the process can be altered to allow for many of these assumptions to change.
 
-- for tool installation you use exclusively the Main Tool Shed at `https://toolshed.g2.bx.psu.edu`
-- you have access to the API key of an admin user of the target Galaxy instance in an env variable called `GALAXY_API_KEY`
-- you are fine with alphabetical order of tools within the tool sections
+- For tool installation you use exclusively the Main Tool Shed at `https://toolshed.g2.bx.psu.edu`
+- You have access to the API key of an admin user of the target Galaxy instance in an env variable called `export GALAXY_API_KEY`. You need to run `export GALAXY_API_KEY` to make it available to the Makefile targets.
+- You are fine with alphabetical order of tools within the tool sections
 
-### step-by-step
+### Create Basic Tool Lists
 - create a new repository using the template `https://github.com/martenson/galaxy_tools_management_template` and `cd` into the containing folder
 - make and activate venv `python3 -m venv .venv && source .venv/bin/activate`
 - install requirements.txt `pip install -r requirements.txt`
@@ -79,10 +79,10 @@ galaxy-qa2.galaxy.cloud.e-infra.cz/sections/
 1 directory, 7 files
 ```
 
-- Now we can run a sanity check tool installation. Nothing will be changed.
+- Now we can run a sanity `make install` check. Nothing should be installed.
 
 ```sh
-$ find galaxy-qa2.galaxy.cloud.e-infra.cz/sections -name '*.yml.lock' | xargs -n 1 -I {} shed-tools install --toolsfile {} --galaxy galaxy-qa2.galaxy.cloud.e-infra.cz --api_key $(GALAXY_API_KEY) --skip_install_resolver_dependencies
+$ INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz make install
 
 Storing log file in: /var/folders/pr/tg7jwht95nvcn_f0n8g2zvv00000gn/T/ephemeris_5z6l0zj1
 URL should start with http:// or https://. https:// chosen by default.
@@ -110,7 +110,9 @@ All repositories have been installed.
 Total run time: 0:00:00.141551
 ```
 
-## Set up linting
+And that's it, we have basic lists of tools, that are installed on our instance, sorted into files based on their section.
+
+### How to Lint
 
 - Take the schema template called `.schema_temnplate.yml` and copy to `galaxy-qa2.galaxy.cloud.e-infra.cz/schema/.schema.yml`. Then modify it to add the new section ids (`fetch_sequences___alignments`, `mapping`, `proteomics`) of your tools. This will help you ensure section consistency later. It will look like this:
 
@@ -161,7 +163,7 @@ find ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/ -name '*.yml' | grep '^\./[^
 find ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P 16 python3 scripts/identify_unpinned.py
 ```
 
-## Finalize the yml files
+### Finalize the Tool Lists
 
 If the files failed linting we can use the `fix` Makefile target to fix them.
 This process also adds flags for dependency handling. If you want the tool installation process to install dependencies (e.g. the corresponding Conda packages) you can pass `-resdep` to the `fix_lockfile.py` script (maybe add it to the `Makefile`).
@@ -220,11 +222,93 @@ tools:
 - more tools here
 ```
 
+### Update a tool
+
+Let's say I want to update tools from the owner `devteam`. I can run the following Makefile target:
+
+```sh
+$ REPO_OWNER=devteam INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz make update-owner
+find ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P 16  python3 scripts/update_tool.py --owner devteam
+INFO:root:Fetching updates for devteam/fastqc
+INFO:root:Found newer revision of devteam/fastqc (2c64fded1286)
+```
+
+And it will result in the following change in my `.yml.lock` file. The `fastqc` from `devteam` has a new latest release and its revision has been added.
 
 
+```diff
+--- a/galaxy-qa2.galaxy.cloud.e-infra.cz/sections/fetch_sequences___alignments.yml.lock
++++ b/galaxy-qa2.galaxy.cloud.e-infra.cz/sections/fetch_sequences___alignments.yml.lock
+@@ -5,6 +5,7 @@ tools:
+ - name: fastqc
+   owner: devteam
+   revisions:
++  - 2c64fded1286
+```
 
+Now when I run the `make install` target, the new revision (`2c64fded1286`) will be installed on my instance.
 
-## (optional) Simplify Your Life With Tool Panel Views
+```sh
+$ INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz make install
+
+Storing log file in: /var/folders/y1/w_qtyhld4mz_7x0ns514twpr0000gn/T/ephemeris_zzjwc456
+URL should start with http:// or https://. https:// chosen by default.
+(1/1) Installing repository fastqc from devteam to section "None" at revision 2c64fded1286 (TRT: 0:00:00.886010)
+	repository fastqc installed successfully (in 0:00:07.420886) at revision 2c64fded1286
+Installed repositories (1): [('fastqc', '2c64fded1286')]
+...
+log continues
+```
+
+Note:
+ - If you want to update a subset of tools from the owner remove the revisions you don't want.
+ - To only update a specific repository run `REPO_NAME=fastqc make update-repo`
+ - To update all run `make update-all`
+ - You can also run the `scripts/update_tool.py` directly
+
+### Add New Tool
+
+To add new tool modify the `.yml` file of the corresponding section and add the `owner` and the `name`. E.g.:
+
+```diff
+--- a/galaxy-qa2.galaxy.cloud.e-infra.cz/sections/fetch_sequences___alignments.yml
++++ b/galaxy-qa2.galaxy.cloud.e-infra.cz/sections/fetch_sequences___alignments.yml
+@@ -2,3 +2,5 @@ tool_panel_section_label: Fetch Sequences / Alignments
+ tools:
+ - name: fastqc
+   owner: devteam
++- name: fastp
++  owner: iuc
+```
+
+Now execute `make fix` to fetch the information about latest revision and add it to the `.yml.lock` file. The resulting entry will look like this.
+
+```diff
+--- a/galaxy-qa2.galaxy.cloud.e-infra.cz/sections/fetch_sequences___alignments.yml.lock
++++ b/galaxy-qa2.galaxy.cloud.e-infra.cz/sections/fetch_sequences___alignments.yml.lock
+@@ -5,6 +5,13 @@ tools:
+ - name: fastqc
+   owner: devteam
+   revisions:
+   - 2c64fded1286
+   - 5ec9f6bceaee
+   tool_panel_section_id: fetch_sequences___alignments
+   tool_panel_section_label: Fetch Sequences / Alignments
++- name: fastp
++  owner: iuc
++  revisions:
++  - 1c183b0a6cfd
++  tool_panel_section_id: fetch_sequences___alignments
++  tool_panel_section_label: Fetch Sequences / Alignments
+```
+
+Your lists are now ready for installation, you can run `make install`.
+
+## Configure GitHub Actions To Lint and Fix
+
+### (optional) Automate Tool Installation using CRON
+
+### (optional) Simplify Your Life With Tool Panel Views
 
 Order of sections and tools is persisted by Galaxy in the `integrated_tool_conf.xml` file.
 However what is in this file is affected by the contents and the loading order of **all** tool configuration files.
@@ -233,7 +317,7 @@ In addition to that the contents of this integrated configuration is regenerated
 These points above make the task of managing the Galaxy's toolset complicated.
 However, instead of modifying this file one can opt-in to use tool panel views instead, bypassing these steps.
 
-### Configure Galaxy to use panel views
+#### Configure Galaxy to use panel views
 
 ```yml
   # Directory to check out for toolbox tool panel views. The path is
@@ -249,7 +333,7 @@ However, instead of modifying this file one can opt-in to use tool panel views i
   default_panel_view: all_tools
 ```
 
-### Define a Tool Panel View
+#### Define a Tool Panel View
 
 Take [an example tool panel view](galaxy-qa2.galaxy.cloud.e-infra.cz/plugins/activities/all_tools.yml) in this template.
 Modify it for your purposes, store it in `galaxy_dir/config/plugins/activities` and enable using the options above. Restart Galaxy.
@@ -279,9 +363,22 @@ items:
   - filter_and_sort
 ```
 
-### inspired by
+## todos and ideas
+
+- make this walkthrough a GTN training
+
+
+## inspired by
 
 - https://github.com/galaxyproject/usegalaxy-tools
 - https://github.com/usegalaxy-eu/usegalaxy-eu-tools/
 - https://github.com/Helmholtz-UFZ/ufz-galaxy-tools
 - https://github.com/CESNET/galaxy_tools
+
+## thanks to
+
+- Nate Coraor
+- Helena Rashe
+- Matthias Bernt
+- Bjoern Gruening
+- Marius van den Beek
