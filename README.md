@@ -4,9 +4,20 @@ This template is designed to provide Galaxy administrators with a process to eas
 
 When set up it can also be used as a contact point for users to request tool installations from their admins.
 
+Table of Contents
+- [Create Basic Tool Lists](#create-basic-tool-lists)
+- [How to Lint](#how-to-lint)
+- [Finalize the Tool Lists](#finalize-the-tool-lists)
+- [Update a Tool](#update-a-tool)
+- [Add New Tool](#add-new-tool)
+- [Configure GitHub Actions](#configure-github-actions)
+- [(optional) Automate Tool Installation using CRON](#optional-automate-tool-installation-using-cron)
+- [(optional) Simplify Your Life With Tool Panel Views](#optional-simplify-your-life-with-tool-panel-views)
+
+
 ## walkthrough: How To Use This Template
 
-### Assumptions:
+### Assumptions
 
 The following walkthrough is detailed but makes some assumptions in order to not branch out too much. However the process can be altered to allow for many of these assumptions to change.
 
@@ -304,7 +315,7 @@ Now execute `make fix` to fetch the information about latest revision and add it
 
 Your lists are now ready for installation, you can run `make install`.
 
-## Configure GitHub Actions To Lint and Fix
+## Configure GitHub Actions
 
 ### (optional) Automate Tool Installation using CRON
 
@@ -366,6 +377,8 @@ items:
 ## todos and ideas
 
 - make this walkthrough a GTN training
+- add a github action for tool installation
+- implement automated uninstallation of tools
 
 
 ## inspired by
