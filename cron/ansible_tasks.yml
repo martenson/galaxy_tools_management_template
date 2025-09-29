@@ -1,9 +1,13 @@
+# Note the variables this excerpt assumes to exist in your playbook:
+# galaxy_root, galaxy_user_name, galaxy_user_group_name, playbook_dir
+
 - hosts: galaxyservers
   become: true
   become_user: root
   post_tasks:
     - name: Create a file with key for CRON jobs
       ansible.builtin.copy:
+        # the following variable "api_key" has to be defined somewhere in your playbook, preferrably in an encrypted vault
         content: |
           {{ api_key }}
         dest: "/home/{{ galaxy_user_name }}/.galaxy_api_key"
