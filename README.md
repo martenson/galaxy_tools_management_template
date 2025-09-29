@@ -1,21 +1,25 @@
-# galaxy_tools_management_template
+# Streamline Galaxy Tool Management
 
 This template is designed to provide Galaxy administrators with a process to ease the burden of maintaining tool repositories installed in a Galaxy instance.
 
-When set up it can also be used as a contact point for users to request tool installations.
+When set up it can also be used as a contact point for users to request tool installations from their admins.
 
-## Convert your instance to use this template
+## walkthrough: Set up this template
 
 ### assumptions:
-- for tool installation you are using exclusively the Main Tool Shed at `https://toolshed.g2.bx.psu.edu`, others can be used but that is not part of the basic walk-through
-- you have access to the API key of an admin user of the target Galaxy instance in a variable called `GALAXY_API_KEY`
+
+The following walkthrough is detailed but makes some assumptions in order to not branch out too much. However the process can be altered to allow for many of these assumptions to change.
+
+- for tool installation you use exclusively the Main Tool Shed at `https://toolshed.g2.bx.psu.edu`
+- you have access to the API key of an admin user of the target Galaxy instance in an env variable called `GALAXY_API_KEY`
+- you are fine with alphabetical order of tools within the tool sections
 
 ### step-by-step
-- create a new repository using the template `https://github.com/martenson/galaxy_tools_management_template`
-- make venv `python3 -m venv .venv && source .venv/bin/activate`
+- create a new repository using the template `https://github.com/martenson/galaxy_tools_management_template` and `cd` into the containing folder
+- make and activate venv `python3 -m venv .venv && source .venv/bin/activate`
 - install requirements.txt `pip install -r requirements.txt`
-- create a folder in the repository named the same as your Galaxy's url, for demonstration purposes the template has a folder with my QA instance: `galaxy-qa2.galaxy.cloud.e-infra.cz`
-- to obtain the initial list of tools installed on your instance run the following Ephemeris command.
+- create a folder in the repository named the same as your Galaxy's url, for demonstration purposes the template has a folder with my QA instance `galaxy-qa2.galaxy.cloud.e-infra.cz` which this walkthrough will use
+- to obtain the initial list of tools installed on your instance run the following [Ephemeris](https://github.com/galaxyproject/ephemeris) command:
 
 ```sh
 $ get-tool-list --include_tool_panel_id -g "https://galaxy-qa2.galaxy.cloud.e-infra.cz/" --api_key $(GALAXY_API_KEY) -o galaxy-qa2.galaxy.cloud.e-infra.cz/qa2.all.yml --get_all_tools
@@ -178,7 +182,7 @@ DEBUG:root:Examining iuc/bwa_mem2
 ```
 
 In my case the process made the following changes to each lockfile.
-Note I don't want the Conda packages installed, because I use singularity images exclusively so `install_resolver_dependencies: false` is what I got.
+Note I don't want the Conda packages installed, because I use singularity images exclusively so I used `-resdep` and therefore got `install_resolver_dependencies: false` in my lockfiles.
 
 ```diff
 diff --git a/galaxy-qa2.galaxy.cloud.e-infra.cz/sections/mapping.yml.lock b/galaxy-qa2.galaxy.cloud.e-infra.cz/sections/mapping.yml.lock
@@ -199,7 +203,81 @@ index 6b2083f..50d5091 100644
 -  tool_shed_url: toolshed.g2.bx.psu.edu
 ```
 
+And the resulting lockfile looks like this:
 
+```yml
+install_repository_dependencies: true
+install_resolver_dependencies: false
+install_tool_dependencies: false
+tools:
+- name: bwa_mem2
+  owner: iuc
+  revisions:
+  - af91699b8d4c
+  tool_panel_section_id: mapping
+  tool_panel_section_label: Mapping
+...
+- more tools here
+```
+
+
+
+
+
+## (optional) Simplify Your Life With Tool Panel Views
+
+Order of sections and tools is persisted by Galaxy in the `integrated_tool_conf.xml` file.
+However what is in this file is affected by the contents and the loading order of **all** tool configuration files.
+In addition to that the contents of this integrated configuration is regenerated on Galaxy restart.
+
+These points above make the task of managing the Galaxy's toolset complicated.
+However, instead of modifying this file one can opt-in to use tool panel views instead, bypassing these steps.
+
+### Configure Galaxy to use panel views
+
+```yml
+  # Directory to check out for toolbox tool panel views. The path is
+  # relative to the Galaxy root dir.  To use an absolute path begin the
+  # path with '/'.  This is a comma-separated list.
+  panel_views_dir: config/plugins/activities
+
+  # Default tool panel view for the current Galaxy configuration. This
+  # should refer to an id of a panel view defined using the panel_views
+  # or panel_views_dir configuration options or an EDAM panel view. The
+  # default panel view is simply called `default` and refers to the tool
+  # panel state defined by the integrated tool panel.
+  default_panel_view: all_tools
+```
+
+### Define a Tool Panel View
+
+Take [an example tool panel view](galaxy-qa2.galaxy.cloud.e-infra.cz/plugins/activities/all_tools.yml) in this template.
+Modify it for your purposes, store it in `galaxy_dir/config/plugins/activities` and enable using the options above. Restart Galaxy.
+
+Beside the root element (`id: all_tools`) you define the ordered `items:` (section ids from your `.yml.lock` files) and separate section groups by `type: label`.
+This will ensure consistent ordering of the sections. All tools within the section are going to be sorted alphabetically, a consistent and predictable approach for the users.
+
+See the minimal excerpt below.
+
+```yml
+name: Tools
+type: generic
+id: all_tools
+items:
+- sections:
+  - upload_file
+  - get_data
+  - data_source_tools
+  - send_data
+  - collection_operations
+  - expression_tools
+- id: general_text_label
+  text: General Text Tools
+  type: label
+- sections:
+  - text_manipulation
+  - filter_and_sort
+```
 
 ### inspired by
 

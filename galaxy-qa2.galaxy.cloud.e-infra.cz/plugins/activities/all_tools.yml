@@ -1,0 +1,107 @@
+name: Tools
+type: generic
+id: all_tools
+items:
+- sections:
+  - upload_file
+  - get_data
+  - data_source_tools
+  - send_data
+  - collection_operations
+  - expression_tools
+- id: general_text_label
+  text: General Text Tools
+  type: label
+- sections:
+  - text_manipulation
+  - filter_and_sort
+  - join__subtract_and_group
+  - convert
+  - convert_formats
+  - builtin_converters
+- id: genomic_manip_label
+  text: Genomic File Manipulation
+  type: label
+- sections:
+  - fasta_fastq
+  - fastq_quality_control
+  - quality_control
+  - sam_bam
+  - bed
+  - nanopore
+  - lift_over
+  - extract_features
+  - operate_on_genomic_intervals
+  - fetch_sequences___alignments
+- id: genomics_analysis_label
+  text: Genomics Analysis
+  type: label
+- sections:
+  - assembly
+  - annotation
+  - mapping
+  - variant_calling
+  - rna_analysis
+  - multiple_alignments
+  - hgv
+  - evolution
+  - regional_variation
+  - biodiversity_data_exploration
+  - genome_diversity
+  - rna_seq
+  - peak_calling
+  - genome_editing
+  - epigenetics
+  - phylogenetics
+  - phenotype_association
+  - single_cell
+  - hca_single_cell
+- id: stats_viz
+  text: Statistics and Visualization
+  type: label
+- sections:
+  - statistics
+  - machine_learning
+  - plots
+  - interactive_tools
+  - graph_display_data
+- id: genomics_toolkits_label
+  text: Genomics Toolkits
+  type: label
+- sections:
+  - mothur
+  - qiime_2
+  - picard
+  - deeptools
+  - emboss
+  - ncbi_blast
+  - scanpy
+  - hicexplorer
+  - gemini
+  - motif_tools
+  - gatk_tools
+  - apollo
+- id: domain_tools_label
+  text: Domain Tools
+  type: label
+- sections:
+  - virology
+  - metagenomic_analysis
+  - proteomics
+  - metabolomics
+  - muon_spectroscopy
+  - chemicaltoolbox
+  - astronomy
+  - imaging
+  - climate_analysis
+  - spatial_omics
+  - ecoregionalization
+  - species_abundance
+  - ontology
+- id: testing_tools_label
+  text: Testing Tools
+  type: label
+- sections:
+  - local_tools
+  - test_tools
+  - other_tools
