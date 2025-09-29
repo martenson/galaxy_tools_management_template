@@ -315,9 +315,24 @@ Now execute `make fix` to fetch the information about latest revision and add it
 
 Your lists are now ready for installation, you can run `make install`.
 
-## Configure GitHub Actions
+### Configure GitHub Actions
+
+In the `.github/workflows/` folder there are multiple GitHub workflows prepared.
+They will allow you to use the CI to lint, fix, and update on click or on schedule.
+
+It contains these workflows:
+
+- `cron_update.yml`: this workflow is running on schedule, it will periodically create a pull request with updates to all tools for the configured instance
+- `dispatch_lint.yml`: you trigger this workflow manually, it will lint all tool lists in the repository
+- `dispatch_update.yml`: you trigger this workflow by selecting a Galaxy instance, it will check available updates for all tools on the instance and create a PR with updated versions
+- `fix.yml`: on every push to the main branch this workflow will attempt to find problems and if there are any it will create a pull request with a fix.
+- `lint.yml`: on every pull request to the main branch this workflow will run a basic linting check, to make sure you are working with valid yml tool lists.
 
 ### (optional) Automate Tool Installation using CRON
+
+In the `cron` folder there is an excerpt of a Galaxy playbook I use to deploy a script to the machine that runs Galaxy.
+This cron job pulls the latest version of the tool repository from GitHub and installs all the revisions that are specified in the
+tool lists but absent on the instance.
 
 ### (optional) Simplify Your Life With Tool Panel Views
 
