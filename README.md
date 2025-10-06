@@ -392,8 +392,11 @@ items:
 ## todos and ideas
 
 - make this walkthrough a GTN training
-- add a github action for tool installation
+- create a log file and a PR it after tool installation action
 - implement automated uninstallation of tools
+- implement moving tools between sections
+- integrate with Galaxy Labs concept
+- integrate with Galaxy CoDex so there is a predefined up-to-date set of tools to be installed and maintained
 
 
 ## inspired by
