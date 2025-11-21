@@ -32,6 +32,6 @@ update-all: ## For the given INSTANCE update all tools
 	find ./$(INSTANCE)/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P $(NPROC) python3 scripts/update_tool.py
 
 install: ## For the given INSTANCE install all revisions that are missing
-	find ./$(INSTANCE)/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P 1 -I {} shed-tools install --toolsfile {} --galaxy $(INSTANCE) --api_key $(GALAXY_API_KEY) --skip_install_resolver_dependencies
+	find ./$(INSTANCE)/sections/ -name '*.yml.lock' | grep '^\./[^/]*/' | xargs -n 1 -P 1 -I {} shed-tools install --toolsfile {} --galaxy $(INSTANCE) --api_key $(GALAXY_API_KEY) --skip_install_resolver_dependencies
 
 .PHONY: fix lint help update-owner update-all install
