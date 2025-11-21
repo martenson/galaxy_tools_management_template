@@ -54,16 +54,40 @@ def strip_superflous(cat):
     out = {'tool_panel_section_label': cat[0]['tool_panel_section_label']}
 
     for tool in cat:
-        del tool['tool_panel_section_label']
-        del tool['tool_panel_section_id']
-        del tool['revisions']
-        if tool['tool_shed_url'] == 'toolshed.g2.bx.psu.edu':
+        if 'tool_panel_section_label' in tool:
+            del tool['tool_panel_section_label']
+        if 'tool_panel_section_label' in tool:
+            del tool['tool_panel_section_id']
+        if 'revisions' in tool:
+            del tool['revisions']
+        if 'tool_shed_url' in tool and \
+            tool['tool_shed_url'] in ['toolshed.g2.bx.psu.edu', 'https://toolshed.g2.bx.psu.edu']:
             del tool['tool_shed_url']
 
     out['tools'] = cat
 
     return out
 
+# Adapted from ephemeris
+def reduce_tool_list(tool_list):
+    changes_in_tool_list = True
+    while changes_in_tool_list:
+        changes_in_tool_list = False
+        for current_tool in tool_list:
+            for tool in tool_list:
+                if current_tool is tool:
+                    continue
+                if (
+                    tool["name"] == current_tool["name"]
+                    and tool["owner"] == current_tool["owner"]
+                ):
+                    if 'revisions' in current_tool and 'revisions' in tool:
+                        current_tool["revisions"].extend(tool["revisions"])
+                    tool_list.remove(tool)
+                    changes_in_tool_list = True
+            if 'revisions' in current_tool:
+                current_tool["revisions"] = list(set(current_tool["revisions"]))
+    return tool_list
 
 def main():
 
@@ -105,6 +129,13 @@ def main():
         good_fname = outdir + "/" + slugify(fname) + ".yml"
         if args.lockfiles:
             good_fname += ".lock"
+        if os.path.exists(good_fname):
+            with open(good_fname) as f:
+                current_yaml_dict = yaml.safe_load(f)
+            categories[cat] += current_yaml_dict['tools']
+        # Remove duplicates:
+        reduce_tool_list(categories[cat])
+        if args.lockfiles:
             tool_yaml = {'tools': categories[cat]}
         else:
             tool_yaml = strip_superflous(categories[cat])
