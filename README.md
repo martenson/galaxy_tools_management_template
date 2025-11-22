@@ -22,7 +22,7 @@ Table of Contents
 The following walkthrough is detailed but makes some assumptions in order to not branch out too much. However the process can be altered to allow for many of these assumptions to change.
 
 - For tool installation you use exclusively the Main Tool Shed at `https://toolshed.g2.bx.psu.edu`
-- You have access to the API key of an admin user of the target Galaxy instance in an env variable called `export GALAXY_API_KEY`. You need to run `export GALAXY_API_KEY` to make it available to the Makefile targets.
+- You have access to the API key of an admin user of the target Galaxy instance in an env variable called `GALAXY_API_KEY`. You need to run `export GALAXY_API_KEY` to make it available to the Makefile targets.
 - You are fine with alphabetical order of tools within the tool sections
 
 ### Create Basic Tool Lists
@@ -33,7 +33,8 @@ The following walkthrough is detailed but makes some assumptions in order to not
 - to obtain the initial list of tools installed on your instance run the following [Ephemeris](https://github.com/galaxyproject/ephemeris) command:
 
 ```sh
-$ get-tool-list --include_tool_panel_id -g "https://galaxy-qa2.galaxy.cloud.e-infra.cz/" --api_key $(GALAXY_API_KEY) -o galaxy-qa2.galaxy.cloud.e-infra.cz/qa2.all.yml --get_all_tools
+$ export INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz
+$ get-tool-list --include_tool_panel_id -g "$INSTANCE" --api_key ${GALAXY_API_KEY} -o ${INSTANCE}/qa2.all.yml --get_all_tools
 ```
 (Note without `--get_all_tools` the command ignores tools which are `uninstalled` but not `deleted`).
 
@@ -69,9 +70,9 @@ tools:
 - We create a new `sections` folder under out instance and using the `split_tool_yaml.py` script run two following python3 commands to create one `.yml` file and one `.yml.lock` file per section:
 
 ```sh
-$ mkdir galaxy-qa2.galaxy.cloud.e-infra.cz/sections/
-$ python3 scripts/split_tool_yaml.py -i galaxy-qa2.galaxy.cloud.e-infra.cz/qa2.all.yml -o galaxy-qa2.galaxy.cloud.e-infra.cz/sections/
-$ python3 scripts/split_tool_yaml.py -i galaxy-qa2.galaxy.cloud.e-infra.cz/qa2.all.yml -o galaxy-qa2.galaxy.cloud.e-infra.cz/sections/ -l
+$ mkdir ${INSTANCE}/sections/
+$ python3 scripts/split_tool_yaml.py -i ${INSTANCE}/qa2.all.yml -o ${INSTANCE}/sections/
+$ python3 scripts/split_tool_yaml.py -i ${INSTANCE}/qa2.all.yml -o ${INSTANCE}/sections/ -l
 ```
 
 - In this demonstration I ended up with these 6 files inside new sections folder, named after sections ids:
@@ -93,7 +94,8 @@ galaxy-qa2.galaxy.cloud.e-infra.cz/sections/
 - Now we can run a sanity `make install` check. Nothing should be installed.
 
 ```sh
-$ INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz make install
+$ export INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz
+$ make install
 
 Storing log file in: /var/folders/pr/tg7jwht95nvcn_f0n8g2zvv00000gn/T/ephemeris_5z6l0zj1
 URL should start with http:// or https://. https:// chosen by default.
@@ -125,7 +127,7 @@ And that's it, we have basic lists of tools, that are installed on our instance,
 
 ### How to Lint
 
-- Take the schema template called `.schema_temnplate.yml` and copy to `galaxy-qa2.galaxy.cloud.e-infra.cz/schema/.schema.yml`. Then modify it to add the new section ids (`fetch_sequences___alignments`, `mapping`, `proteomics`) of your tools. This will help you ensure section consistency later. It will look like this:
+- Take the schema template called `.schema_template.yml` and copy to `${INSTANCE}/schema/.schema.yml`. Then modify it to add the new section ids (`fetch_sequences___alignments`, `mapping`, `proteomics`) of your tools. This will help you ensure section consistency later. It will look like this:
 
 ```yml
 ---
@@ -158,9 +160,12 @@ mapping:
                     required: false
 ```
 
-- Run the `lint` using Makefile, supply the INSTANCE url
+- Run the `lint` using Makefile, supply the INSTANCE url (unnecessary if you exported your INSTANCE variable)
 
 ```sh
+$ # export INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz
+$ # make lint
+$ # OR
 $ INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz make lint
 
 find ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P 16 python3 scripts/yaml_check.py
@@ -180,7 +185,8 @@ If the files failed linting we can use the `fix` Makefile target to fix them.
 This process also adds flags for dependency handling. If you want the tool installation process to install dependencies (e.g. the corresponding Conda packages) you can pass `-resdep` to the `fix_lockfile.py` script (maybe add it to the `Makefile`).
 
 ```sh
-$ INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz make fix
+$ export INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz
+$ make fix
 
 # Generate the lockfile or update it if it is missing tools. Also include flags for dependency handling.
 find ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P 16  python3 scripts/fix_lockfile.py
@@ -238,7 +244,8 @@ tools:
 Let's say I want to update tools from the owner `devteam`. I can run the following Makefile target:
 
 ```sh
-$ REPO_OWNER=devteam INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz make update-owner
+$ export INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz
+$ REPO_OWNER=devteam make update-owner
 find ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P 16  python3 scripts/update_tool.py --owner devteam
 INFO:root:Fetching updates for devteam/fastqc
 INFO:root:Found newer revision of devteam/fastqc (2c64fded1286)
@@ -260,7 +267,8 @@ And it will result in the following change in my `.yml.lock` file. The `fastqc` 
 Now when I run the `make install` target, the new revision (`2c64fded1286`) will be installed on my instance.
 
 ```sh
-$ INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz make install
+$ export INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz
+$ make install
 
 Storing log file in: /var/folders/y1/w_qtyhld4mz_7x0ns514twpr0000gn/T/ephemeris_zzjwc456
 URL should start with http:// or https://. https:// chosen by default.
@@ -344,6 +352,8 @@ These points above make the task of managing the Galaxy's toolset complicated.
 However, instead of modifying this file one can opt-in to use tool panel views instead, bypassing these steps.
 
 #### Configure Galaxy to use panel views
+
+Add this to your galaxy config file in the section `galaxy`.
 
 ```yml
   # Directory to check out for toolbox tool panel views. The path is
