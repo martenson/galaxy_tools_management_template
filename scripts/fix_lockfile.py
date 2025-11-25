@@ -62,7 +62,10 @@ def update_file(fn, install_repository_dependencies, install_resolver_dependenci
 
         if 'tool_shed_url' in tool:
             ts_url = tool['tool_shed_url']
-            logging.warning('Non-default Tool Shed URL for %s/%s: %s', tool['owner'], tool['name'], ts_url)
+            if ts_url.endswith('/'):
+                ts_url = ts_url[:-1]
+            if ts_url not in ['toolshed.g2.bx.psu.edu', 'https://toolshed.g2.bx.psu.edu']:
+                logging.warning('Non-default Tool Shed URL for %s/%s: %s', tool['owner'], tool['name'], ts_url)
             new_tool['tool_shed_url'] = ts_url
 
         # Set the section - id supercedes label/name
