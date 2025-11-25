@@ -90,6 +90,10 @@ def update_file(fn, install_repository_dependencies, install_resolver_dependenci
         "install_tool_dependencies": False,     # These are TS deps, not Conda
     })
 
+    # Do not keep tool_panel_section_label in the lock file
+    if 'tool_panel_section_label' in clean_lockfile:
+        del clean_lockfile['tool_panel_section_label']
+
     with open(fn + '.lock', 'w') as handle:
         yaml.dump(clean_lockfile, handle, default_flow_style=False)
 
