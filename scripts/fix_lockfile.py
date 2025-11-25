@@ -9,6 +9,7 @@ import string
 
 logging.basicConfig(level=logging.INFO)
 
+DEFAULT_TOOLSHED_ALIAS = ['toolshed.g2.bx.psu.edu', 'https://toolshed.g2.bx.psu.edu', 'https://toolshed.g2.bx.psu.edu/']
 
 def section_id_chr(c):
     return (c if c in string.ascii_letters + string.digits else '_').lower()
@@ -62,11 +63,10 @@ def update_file(fn, install_repository_dependencies, install_resolver_dependenci
 
         if 'tool_shed_url' in tool:
             ts_url = tool['tool_shed_url']
-            if ts_url.endswith('/'):
-                ts_url = ts_url[:-1]
-            if ts_url not in ['toolshed.g2.bx.psu.edu', 'https://toolshed.g2.bx.psu.edu']:
+            # Only keep the tool_shed_url if it is not the main one
+            if ts_url not in DEFAULT_TOOLSHED_ALIAS:
                 logging.warning('Non-default Tool Shed URL for %s/%s: %s', tool['owner'], tool['name'], ts_url)
-            new_tool['tool_shed_url'] = ts_url
+                new_tool['tool_shed_url'] = ts_url
 
         # Set the section - id supercedes label/name
         if 'tool_panel_section_id' in unlocked:

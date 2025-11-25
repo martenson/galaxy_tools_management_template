@@ -7,6 +7,7 @@ import os
 import string
 import argparse
 
+DEFAULT_TOOLSHED_ALIAS = ['toolshed.g2.bx.psu.edu', 'https://toolshed.g2.bx.psu.edu', 'https://toolshed.g2.bx.psu.edu/']
 
 def slugify(value):
     """
@@ -63,7 +64,7 @@ def strip_superflous(cat, tool_panel_section_label=None):
         if 'revisions' in tool:
             del tool['revisions']
         if 'tool_shed_url' in tool and \
-            tool['tool_shed_url'] in ['toolshed.g2.bx.psu.edu', 'https://toolshed.g2.bx.psu.edu']:
+            tool['tool_shed_url'] in DEFAULT_TOOLSHED_ALIAS:
             del tool['tool_shed_url']
 
     out['tools'] = cat
