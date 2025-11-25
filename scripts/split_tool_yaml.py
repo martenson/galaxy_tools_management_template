@@ -127,7 +127,7 @@ def main():
     for tool in tools:
         # Make sure the revision is a list:
         # Training material provides str
-        if isinstance(tool["revisions"], str):
+        if isinstance(tool.get("revisions", []), str):
             tool["revisions"] = [ tool["revisions"] ]
         categories[tool['tool_panel_section_label']].append(tool)
 
