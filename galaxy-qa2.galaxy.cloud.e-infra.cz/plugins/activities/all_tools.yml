@@ -3,9 +3,11 @@ type: generic
 id: all_tools
 items:
 - sections:
+  - getext
   - upload_file
   - get_data
   - data_source_tools
+  - send
   - send_data
   - collection_operations
   - expression_tools
@@ -13,8 +15,11 @@ items:
   text: General Text Tools
   type: label
 - sections:
+  - textutil
   - text_manipulation
+  - filter
   - filter_and_sort
+  - group
   - join__subtract_and_group
   - convert
   - convert_formats
@@ -29,9 +34,12 @@ items:
   - sam_bam
   - bed
   - nanopore
+  - liftOver
   - lift_over
   - extract_features
+  - bxops
   - operate_on_genomic_intervals
+  - fetchAlignSeq
   - fetch_sequences___alignments
 - id: genomics_analysis_label
   text: Genomics Analysis
@@ -60,6 +68,7 @@ items:
   text: Statistics and Visualization
   type: label
 - sections:
+  - stats
   - statistics
   - machine_learning
   - plots
