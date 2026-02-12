@@ -71,8 +71,8 @@ tools:
 
 ```sh
 $ mkdir ${INSTANCE}/sections/
-$ python3 scripts/split_tool_yaml.py -i ${INSTANCE}/qa2.all.yml -o ${INSTANCE}/sections/
-$ python3 scripts/split_tool_yaml.py -i ${INSTANCE}/qa2.all.yml -o ${INSTANCE}/sections/ -l
+$ python3 scripts/split_tool_yml.py -i ${INSTANCE}/qa2.all.yml -o ${INSTANCE}/sections/
+$ python3 scripts/split_tool_yml.py -i ${INSTANCE}/qa2.all.yml -o ${INSTANCE}/sections/ -l
 ```
 
 - In this demonstration I ended up with these 6 files inside new sections folder, named after sections ids:
