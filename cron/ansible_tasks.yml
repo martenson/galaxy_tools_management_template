@@ -10,7 +10,7 @@
         # the following variable "api_key" has to be defined somewhere in your playbook, preferrably in an encrypted vault
         content: |
           {{ api_key }}
-        dest: "/home/{{ galaxy_user_name }}/.galaxy_api_key"
+        dest: "~{{ galaxy_user_name }}/.galaxy_api_key"
         owner: "{{ galaxy_user_name }}"
         group: "{{ galaxy_user_group_name }}"
         mode: '0600'
@@ -38,5 +38,5 @@
         user: "{{ galaxy_user_name }}"
         minute: "0"
         hour: "3" # 3 am daily
-        job: "/bin/bash -c 'URL={{ inventory_hostname }} API_KEY=$(cat /home/{{ galaxy_user_name }}/.galaxy_api_key) {{ galaxy_root }}/cron/tools/install_tools.sh 2>&1 | logger -t tool_install'"
+        job: "/bin/bash -c 'URL={{ inventory_hostname }} API_KEY=$(cat ~{{ galaxy_user_name }}/.galaxy_api_key) {{ galaxy_root }}/cron/tools/install_tools.sh 2>&1 | logger -t tool_install'"
       tags: cron

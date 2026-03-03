@@ -9,7 +9,7 @@ Table of Contents
 - [How to Lint](#how-to-lint)
 - [Finalize the Tool Lists](#finalize-the-tool-lists)
 - [Update a Tool](#update-a-tool)
-- [Add New Tool](#add-new-tool)
+- [Add New Tool(s)](#add-new-tools)
 - [Configure GitHub Actions](#configure-github-actions)
 - [(optional) Automate Tool Installation using CRON](#optional-automate-tool-installation-using-cron)
 - [(optional) Simplify Your Life With Tool Panel Views](#optional-simplify-your-life-with-tool-panel-views)
@@ -285,7 +285,9 @@ Note:
  - To update all run `make update-all`
  - You can also run the `scripts/update_tool.py` directly
 
-### Add New Tool
+### Add New Tool(s)
+
+#### By name/owner
 
 To add new tool modify the `.yml` file of the corresponding section and add the `owner` and the `name`. E.g.:
 
@@ -322,6 +324,93 @@ Now execute `make fix` to fetch the information about latest revision and add it
 ```
 
 Your lists are now ready for installation, you can run `make install`.
+
+#### By tutorial
+
+- Store the URL of the tutorial in a variable
+```sh
+$ Tuto_URL=https://training.galaxyproject.org/training-material/topics/proteomics/tutorials/maxquant-label-free/tutorial.html
+```
+
+- Extract the tool list from the tutorial
+```sh
+$ tool_file=/tmp/all_tools.yaml
+$ curl $(echo "${Tuto_URL/training-material\/topics/training-material\/api\/topics}" | sed 's/.html$/.json/') | jq .admin_install_yaml -r > ${tool_file}
+
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 47782 100 47782   0     0 240010     0  --:--:-- --:--:-- --:--:-- 240110
+```
+
+- Split the tool list by section
+```sh
+$ export INSTANCE=galaxy-qa2.galaxy.cloud.e-infra.cz
+$ python3 scripts/split_tool_yaml.py -i ${tool_file} -o ${INSTANCE}/sections/
+$ python3 scripts/split_tool_yaml.py -i ${tool_file} -o ${INSTANCE}/sections/ -l
+```
+
+- In this demonstration I ended up with 4 new files, 8 files in total inside new sections folder, named after sections ids:
+
+```sh
+$ tree galaxy-qa2.galaxy.cloud.e-infra.cz/sections/
+galaxy-qa2.galaxy.cloud.e-infra.cz/sections/
+├── fetch_sequences___alignments.yml
+├── fetch_sequences___alignments.yml.lock
+├── graph_display_data.yml
+├── graph_display_data.yml.lock
+├── mapping.yml
+├── mapping.yml.lock
+├── proteomics.yml
+├── proteomics.yml.lock
+├── text_manipulation.yml
+└── text_manipulation.yml.lock
+
+1 directory, 10 files
+```
+
+- Fix:
+```sh
+$ make fix
+# Generate the lockfile or update it if it is missing tools. Also add flags for dependency handling.
+find ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P 8  python3 scripts/fix_lockfile.py
+INFO:root:Processing ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/proteomics.yml
+INFO:root:Processing ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/fetch_sequences___alignments.yml
+INFO:root:Processing ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/mapping.yml
+INFO:root:Processing ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/text_manipulation.yml
+INFO:root:Processing ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/graph_display_data.yml
+# Add the latest revision to every repository that has no revision
+find ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P 8  python3 scripts/update_tool.py --without --log debug
+DEBUG:root:Examining iuc/bwa_mem2
+DEBUG:root:Examining devteam/histogram
+DEBUG:root:Examining galaxy-australia/alphafold2
+DEBUG:root:Examining galaxyp/maxquant
+DEBUG:root:Examining galaxyp/msstats
+DEBUG:root:Examining devteam/fastqc
+DEBUG:root:Examining iuc/fastp
+DEBUG:root:Examining bgruening/text_processing
+DEBUG:root:Examining devteam/column_maker
+```
+- Lint:
+```sh
+$ make lint
+# Check the yml files have valid syntax and are loadable
+find ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P 8  python3 scripts/yaml_check.py
+Checking modified yaml file ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/mapping.yml...
+Checking modified yaml file ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/proteomics.yml...
+Checking modified yaml file ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/fetch_sequences___alignments.yml...
+Checking modified yaml file ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/text_manipulation.yml...
+Checking modified yaml file ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/graph_display_data.yml...
+# Validate the yml files against the schema
+find ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P 8  -I {} pykwalify -d '{}' -s ./galaxy-qa2.galaxy.cloud.e-infra.cz/schema/.schema.yml
+xargs: warning: options --max-args and --replace/-I/-i are mutually exclusive, ignoring previous --max-args value
+ INFO - validation.valid
+ INFO - validation.valid
+ INFO - validation.valid
+ INFO - validation.valid
+ INFO - validation.valid
+# Verify that all repositories have at least one revision
+find ./galaxy-qa2.galaxy.cloud.e-infra.cz/sections/ -name '*.yml' | grep '^\./[^/]*/' | xargs -n 1 -P 8  python3 scripts/identify_unpinned.py
+```
 
 ### Configure GitHub Actions
 

@@ -7,6 +7,7 @@ import os
 import string
 import argparse
 
+DEFAULT_TOOLSHED_ALIAS = ['toolshed.g2.bx.psu.edu', 'https://toolshed.g2.bx.psu.edu', 'https://toolshed.g2.bx.psu.edu/']
 
 def slugify(value):
     """
@@ -19,7 +20,7 @@ def slugify(value):
     return rval
 
 
-def strip_superflous(cat):
+def strip_superflous(cat, tool_panel_section_label=None):
     """
     Re-arranges the ephemeris returned yml format for tools to the usegalaxy-tools minimal tool yml format
 
@@ -51,7 +52,9 @@ def strip_superflous(cat):
        ...
     """
 
-    out = {'tool_panel_section_label': cat[0]['tool_panel_section_label']}
+    if tool_panel_section_label is None:
+        tool_panel_section_label = cat[0]['tool_panel_section_label']
+    out = {'tool_panel_section_label': tool_panel_section_label}
 
     for tool in cat:
         if 'tool_panel_section_label' in tool:
@@ -61,7 +64,7 @@ def strip_superflous(cat):
         if 'revisions' in tool:
             del tool['revisions']
         if 'tool_shed_url' in tool and \
-            tool['tool_shed_url'] in ['toolshed.g2.bx.psu.edu', 'https://toolshed.g2.bx.psu.edu']:
+            tool['tool_shed_url'] in DEFAULT_TOOLSHED_ALIAS:
             del tool['tool_shed_url']
 
     out['tools'] = cat
@@ -91,10 +94,10 @@ def reduce_tool_list(tool_list):
 
 def main():
 
-    VERSION = 0.2
+    VERSION = 0.3
 
-    parser = argparse.ArgumentParser(description="Splits up a Ephemeris `get_tool_list` yml file for a Galaxy server into individual files for each Section Label.")
-    parser.add_argument("-i", "--infile", help="The returned `get_tool_list` yml file to split.")
+    parser = argparse.ArgumentParser(description="Splits up a tool list from Ephemeris `get_tool_list` or `workflow-to-tools` or training material yml file for a Galaxy server into individual files for each Section Label (it can updates existing ones).")
+    parser.add_argument("-i", "--infile", help="The yml file with tools to split.")
     parser.add_argument("-o", "--outdir", help="The output directory to put the split files into. Defaults to infile without the .yml.")
     parser.add_argument("-l", "--lockfiles", action='store_true', help="Produce lock files instead of plain yml files.")
     parser.add_argument("--version", action='store_true')
@@ -122,6 +125,10 @@ def main():
     categories = defaultdict(list)
 
     for tool in tools:
+        # Make sure the revision is a list:
+        # Training material provides str
+        if isinstance(tool.get("revisions", []), str):
+            tool["revisions"] = [ tool["revisions"] ]
         categories[tool['tool_panel_section_label']].append(tool)
 
     for cat in categories:
@@ -132,13 +139,14 @@ def main():
         if os.path.exists(good_fname):
             with open(good_fname) as f:
                 current_yaml_dict = yaml.safe_load(f)
-            categories[cat] += current_yaml_dict['tools']
+            # Use existing tools before new ones
+            categories[cat] = current_yaml_dict['tools'] + categories[cat]
         # Remove duplicates:
         reduce_tool_list(categories[cat])
         if args.lockfiles:
             tool_yaml = {'tools': categories[cat]}
         else:
-            tool_yaml = strip_superflous(categories[cat])
+            tool_yaml = strip_superflous(categories[cat], cat)
         if args.verbose:
             print("Working on: %s" % good_fname)
         with open(good_fname, 'w') as outfile:
